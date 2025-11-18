@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import PhoneIcon from '@mui/icons-material/Phone';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../context/SessionContext';
 import type { Session } from '../types/chat';
@@ -27,9 +27,17 @@ export const LandingPage = () => {
   const [email, setEmail] = useState('');
   const [mode, setMode] = useState<'chat' | 'call'>('chat');
   const [error, setError] = useState<string | null>(null);
+  const [emailTouched, setEmailTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { setSession } = useSession();
+
+  const isValidEmail = useMemo(
+    () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()),
+    [email],
+  );
+
+  const showEmailError = emailTouched && (!email.trim() || !isValidEmail);
 
   const handleStart = async () => {
     if (!name.trim()) {
@@ -38,6 +46,10 @@ export const LandingPage = () => {
     }
     if (!email.trim()) {
       setError('Please enter your email to continue.');
+      return;
+    }
+    if (!isValidEmail) {
+      setError('Please enter a valid email address.');
       return;
     }
     if (mode !== 'chat') {
@@ -102,6 +114,11 @@ export const LandingPage = () => {
                   onChange={(event) => setName(event.target.value)}
                   required
                   fullWidth
+                  onBlur={() => setEmailTouched(true)}
+                  error={showEmailError}
+                  helperText={
+                    showEmailError ? 'Enter a valid email address (e.g., user@example.com)' : undefined
+                  }
                 />
                 <TextField
                   label="Email"
@@ -142,7 +159,7 @@ export const LandingPage = () => {
                   variant="contained"
                   size="large"
                   onClick={handleStart}
-                  disabled={loading}
+                  disabled={loading || showEmailError}
                 >
                   {loading ? (
                     <CircularProgress size={24} color="inherit" />

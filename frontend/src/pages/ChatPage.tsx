@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 import {
   Alert,
   Box,
@@ -104,7 +105,7 @@ export const ChatPage = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!session || !message.trim()) return;
+    if (!session || !message.trim() || sendingMessage) return;
     setError(null);
     const outgoing = message.trim();
     setMessage("");
@@ -214,6 +215,15 @@ export const ChatPage = () => {
     navigate("/");
   };
 
+  const handleComposerKeyDown = (
+    event: KeyboardEvent<HTMLDivElement>,
+  ) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   return (
     <Box className="chat-shell">
       <Container
@@ -316,6 +326,7 @@ export const ChatPage = () => {
                 onChange={(event) => setMessage(event.target.value)}
                 multiline
                 minRows={2}
+                onKeyDown={handleComposerKeyDown}
               />
               <Button
                 variant="contained"
