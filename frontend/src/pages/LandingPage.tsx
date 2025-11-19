@@ -12,20 +12,20 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Typography,
-} from '@mui/material';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import PhoneIcon from '@mui/icons-material/Phone';
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSession } from '../context/SessionContext';
-import type { Session } from '../types/chat';
+} from "@mui/material";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
+import PhoneIcon from "@mui/icons-material/Phone";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSession } from "../context/SessionContext";
+import type { Session } from "../types/chat";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
 
 export const LandingPage = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [mode, setMode] = useState<'chat' | 'call'>('chat');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [mode, setMode] = useState<"chat" | "call">("chat");
   const [error, setError] = useState<string | null>(null);
   const [emailTouched, setEmailTouched] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -34,45 +34,46 @@ export const LandingPage = () => {
 
   const isValidEmail = useMemo(
     () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()),
-    [email],
+    [email]
   );
 
   const showEmailError = emailTouched && (!email.trim() || !isValidEmail);
 
   const handleStart = async () => {
     if (!name.trim()) {
-      setError('Please enter your name to continue.');
+      setError("Please enter your name to continue.");
       return;
     }
     if (!email.trim()) {
-      setError('Please enter your email to continue.');
+      setError("Please enter your email to continue.");
       return;
     }
     if (!isValidEmail) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    if (mode !== 'chat') {
-      setError('Audio calls are coming soon. Please choose chat for now.');
+      setError("Please enter a valid email address.");
       return;
     }
     setError(null);
     setLoading(true);
     try {
       const response = await fetch(`${API_BASE}/api/session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: name.trim(), email: email.trim() }),
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || 'Unable to start session');
+        throw new Error(data.error || "Unable to start session");
       }
       setSession(data.session as Session);
-      navigate('/chat');
+      // Navigate based on mode
+      if (mode === "call") {
+        navigate("/call");
+      } else {
+        navigate("/chat");
+      }
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'Unexpected error occurred.';
+        err instanceof Error ? err.message : "Unexpected error occurred.";
       setError(message);
     } finally {
       setLoading(false);
@@ -84,12 +85,13 @@ export const LandingPage = () => {
       <Container maxWidth="sm" sx={{ py: 8 }}>
         <Stack spacing={4} sx={{ maxWidth: 520, mx: "auto" }}>
           <Box textAlign="center">
-                <Typography variant="h3" fontWeight={700}>
-                  Doctor Online 24/7
-                </Typography>
-                <Typography variant="h6" color="text.secondary" mt={1}>
-                  Instant AI-powered triage, lifestyle tips, and specialist guidance.
-                </Typography>
+            <Typography variant="h3" fontWeight={700}>
+              Doctor Online 24/7
+            </Typography>
+            <Typography variant="h6" color="text.secondary" mt={1}>
+              Instant AI-powered triage, lifestyle tips, and specialist
+              guidance.
+            </Typography>
           </Box>
           <Card sx={{ p: 1 }}>
             <CardContent>
@@ -117,7 +119,9 @@ export const LandingPage = () => {
                   onBlur={() => setEmailTouched(true)}
                   error={showEmailError}
                   helperText={
-                    showEmailError ? 'Enter a valid email address (e.g., user@example.com)' : undefined
+                    showEmailError
+                      ? "Enter a valid email address (e.g., user@example.com)"
+                      : undefined
                   }
                 />
                 <TextField
@@ -143,13 +147,13 @@ export const LandingPage = () => {
                       <ChatBubbleOutlineIcon fontSize="small" sx={{ mr: 1 }} />
                       Chat
                     </ToggleButton>
-                    <ToggleButton value="call" disabled>
+                    <ToggleButton value="call">
                       <PhoneIcon fontSize="small" sx={{ mr: 1 }} />
-                      Call (coming soon)
+                      Call
                     </ToggleButton>
                   </ToggleButtonGroup>
                   <Typography variant="caption" color="text.secondary" mt={1}>
-                    Audio consultations are in progress. Try the chat assistant today.
+                    Choose between text chat or voice call consultation.
                   </Typography>
                 </Box>
 
@@ -164,7 +168,7 @@ export const LandingPage = () => {
                   {loading ? (
                     <CircularProgress size={24} color="inherit" />
                   ) : (
-                    'Start session'
+                    "Start session"
                   )}
                 </Button>
               </Stack>
@@ -175,4 +179,3 @@ export const LandingPage = () => {
     </Box>
   );
 };
-

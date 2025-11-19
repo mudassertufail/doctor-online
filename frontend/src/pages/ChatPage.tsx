@@ -19,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { useSession } from "../context/SessionContext";
 import type { ChatMessage } from "../types/chat";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
 
 const formatTime = (timestamp: number) =>
   new Intl.DateTimeFormat(undefined, {
@@ -215,9 +215,7 @@ export const ChatPage = () => {
     navigate("/");
   };
 
-  const handleComposerKeyDown = (
-    event: KeyboardEvent<HTMLDivElement>,
-  ) => {
+  const handleComposerKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       handleSendMessage();
