@@ -7,6 +7,7 @@ export interface CallMessage {
     | "audio_data"
     | "end_call"
     | "transcript_update"
+    | "ai_response"
     | "call_ended"
     | "error";
   sessionId?: string;
@@ -94,6 +95,14 @@ export class CallWebSocketHandler {
             type: "transcript_update",
             sessionId,
             payload: { transcript, isFinal },
+          });
+        },
+        onAIResponse: (text: string) => {
+          // Send AI response text to client
+          this.send({
+            type: "ai_response",
+            sessionId,
+            payload: { text },
           });
         },
         onCallEnd: (reason: string) => {

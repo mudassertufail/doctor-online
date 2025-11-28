@@ -17,8 +17,11 @@ export interface VoiceCallSession {
   ttsProvider: TTSProvider;
   inactivityTimer?: NodeJS.Timeout;
   maxDurationTimer?: NodeJS.Timeout;
+  pendingTranscript?: string;
+  transcriptTimer?: NodeJS.Timeout;
   onAudioOut?: (audioChunk: Buffer) => void;
   onTranscriptUpdate?: (transcript: string, isFinal: boolean) => void;
+  onAIResponse?: (text: string) => void;
   onCallEnd?: (reason: string) => void;
 }
 
@@ -40,6 +43,7 @@ export class VoiceCallService {
     callbacks: {
       onAudioOut: (audioChunk: Buffer) => void;
       onTranscriptUpdate: (transcript: string, isFinal: boolean) => void;
+      onAIResponse?: (text: string) => void;
       onCallEnd: (reason: string) => void;
     }
   ): void {
@@ -134,6 +138,14 @@ export class VoiceCallService {
     if (callSession.maxDurationTimer) {
       clearTimeout(callSession.maxDurationTimer);
     }
+    if (callSession.transcriptTimer) {
+      clearTimeout(callSession.transcriptTimer);
+      console.log("🧹 Cleared pending transcript timer on call end");
+    }
+    
+    // Clear pending transcript
+    delete callSession.pendingTranscript;
+    delete callSession.transcriptTimer;
 
     // Stop STT
     await callSession.sttProvider.stopStream();
@@ -172,17 +184,38 @@ export class VoiceCallService {
     // Only process final transcripts
     if (!result.isFinal) return;
 
-    const userMessage: ChatMessage = {
-      role: "user",
-      content: result.text,
-      timestamp: result.timestamp,
-    };
+    // Store the pending transcript
+    callSession.pendingTranscript = result.text;
 
-    // Append to session history
-    appendMessage(sessionId, userMessage);
+    // Clear any existing timer
+    if (callSession.transcriptTimer) {
+      clearTimeout(callSession.transcriptTimer);
+      console.log("⏱️ Resetting AI response timer (user still speaking)");
+    }
 
-    // Get AI response
-    await this.processAIResponse(sessionId, result.text);
+    // Start new timer with configurable delay
+    callSession.transcriptTimer = setTimeout(async () => {
+      const finalText = callSession.pendingTranscript;
+      if (!finalText) return;
+
+      console.log(`⏰ Processing transcript after ${config.aiResponseDelay}ms delay:`, finalText);
+
+      const userMessage: ChatMessage = {
+        role: "user",
+        content: finalText,
+        timestamp: Date.now(),
+      };
+
+      // Append to session history
+      appendMessage(sessionId, userMessage);
+
+      // Clear pending transcript
+      delete callSession.pendingTranscript;
+      delete callSession.transcriptTimer;
+
+      // Get AI response
+      await this.processAIResponse(sessionId, finalText);
+    }, config.aiResponseDelay);
   }
 
   /**
@@ -226,6 +259,11 @@ export class VoiceCallService {
 
       // Append to history
       appendMessage(sessionId, assistantMessage);
+
+      // Notify frontend of AI response text
+      if (callSession.onAIResponse) {
+        callSession.onAIResponse(aiText);
+      }
 
       // Convert to speech and send
       await this.synthesizeAndSend(sessionId, aiText);
@@ -278,6 +316,13 @@ export class VoiceCallService {
     };
 
     appendMessage(sessionId, assistantMessage);
+
+    // Notify frontend of greeting text
+    const callSession = this.activeCalls.get(sessionId);
+    if (callSession?.onAIResponse) {
+      callSession.onAIResponse(greetingText);
+    }
+
     await this.synthesizeAndSend(sessionId, greetingText);
   }
 

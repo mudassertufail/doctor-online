@@ -211,33 +211,64 @@ export const VoiceCallPage = () => {
               </Typography>
             )}
 
-            <Stack spacing={1.5}>
+            <Stack spacing={2}>
               {transcripts.map((entry, index) => (
-                <Paper
+                <Box
                   key={index}
-                  elevation={1}
                   sx={{
-                    p: 1.5,
-                    bgcolor: entry.isFinal ? "white" : "grey.100",
-                    borderLeft: entry.isFinal ? "4px solid" : "none",
-                    borderColor: "primary.main",
+                    display: "flex",
+                    justifyContent: entry.role === "user" ? "flex-start" : "flex-end",
+                    width: "100%",
                   }}
                 >
-                  <Typography
-                    variant="body2"
+                  <Paper
+                    elevation={2}
                     sx={{
-                      fontStyle: entry.isFinal ? "normal" : "italic",
-                      color: entry.isFinal ? "text.primary" : "text.secondary",
+                      p: 2,
+                      minWidth: "200px",
+                      maxWidth: "75%",
+                      width: "fit-content",
+                      bgcolor: entry.role === "user" ? "grey.200" : "primary.main",
+                      color: entry.role === "user" ? "text.primary" : "primary.contrastText",
+                      borderRadius: 2,
+                      borderTopLeftRadius: entry.role === "user" ? 0 : 2,
+                      borderTopRightRadius: entry.role === "assistant" ? 0 : 2,
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
                     }}
                   >
-                    {entry.text}
-                  </Typography>
-                  {entry.isFinal && (
-                    <Typography variant="caption" color="text.secondary">
-                      {new Date(entry.timestamp).toLocaleTimeString()}
-                    </Typography>
-                  )}
-                </Paper>
+                    <Stack spacing={0.5}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontWeight: 600,
+                          opacity: 0.8,
+                          textTransform: "uppercase",
+                          fontSize: "0.7rem",
+                        }}
+                      >
+                        {entry.role === "user" ? "You" : "Dr. AI"}
+                      </Typography>
+                      <Typography 
+                        variant="body1"
+                        sx={{
+                          wordBreak: "break-word",
+                          overflowWrap: "break-word",
+                          whiteSpace: "normal",
+                          display: "block",
+                        }}
+                      >
+                        {entry.text}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{ opacity: 0.7, textAlign: "right", fontSize: "0.7rem" }}
+                      >
+                        {new Date(entry.timestamp).toLocaleTimeString()}
+                      </Typography>
+                    </Stack>
+                  </Paper>
+                </Box>
               ))}
             </Stack>
           </Box>

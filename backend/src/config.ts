@@ -17,4 +17,7 @@ export const config = {
   // Call timeouts (in milliseconds)
   callInactivityTimeout: Number(process.env.CALL_INACTIVITY_TIMEOUT_MS) || 60000,
   callMaxDuration: Number(process.env.CALL_MAX_DURATION_MS) || 300000,
+  
+  // AI response delay (in milliseconds) - delay before processing final transcript
+  aiResponseDelay: Number(process.env.AI_RESPONSE_DELAY_MS) || 3000,
 };

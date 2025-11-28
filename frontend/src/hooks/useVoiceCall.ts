@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface TranscriptEntry {
   text: string;
-  isFinal: boolean;
+  role: "user" | "assistant";
   timestamp: number;
 }
 
@@ -156,9 +156,54 @@ export const useVoiceCall = ({
 
       case "transcript_update":
         const { transcript, isFinal } = message.payload;
+        
+        setTranscripts((prev) => {
+          // If it's a partial transcript, update the last user message
+          if (!isFinal) {
+            // Check if last message is from user
+            if (prev.length > 0 && prev[prev.length - 1].role === "user") {
+              // Update the last message
+              const updated = [...prev];
+              updated[updated.length - 1] = {
+                text: transcript,
+                role: "user",
+                timestamp: Date.now(),
+              };
+              return updated;
+            } else {
+              // Create new user message
+              return [
+                ...prev,
+                { text: transcript, role: "user", timestamp: Date.now() },
+              ];
+            }
+          } else {
+            // Final transcript - update or create
+            if (prev.length > 0 && prev[prev.length - 1].role === "user") {
+              // Update the last user message with final text
+              const updated = [...prev];
+              updated[updated.length - 1] = {
+                text: transcript,
+                role: "user",
+                timestamp: Date.now(),
+              };
+              return updated;
+            } else {
+              // Create new user message (shouldn't happen, but handle it)
+              return [
+                ...prev,
+                { text: transcript, role: "user", timestamp: Date.now() },
+              ];
+            }
+          }
+        });
+        break;
+      
+      case "ai_response":
+        const { text } = message.payload;
         setTranscripts((prev) => [
           ...prev,
-          { text: transcript, isFinal, timestamp: Date.now() },
+          { text, role: "assistant", timestamp: Date.now() },
         ]);
         break;
 
