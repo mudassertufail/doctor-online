@@ -37,7 +37,9 @@ export class CallWebSocketHandler {
         }
       } catch (error) {
         console.error("Error handling WebSocket message:", error);
-        this.sendError("Invalid message format");
+        console.error("Data type:", typeof data, "Length:", data.length, "First byte:", data[0]);
+        // Don't send error to frontend for audio data parsing issues
+        // Only log it for debugging
       }
     });
 
