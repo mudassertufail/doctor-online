@@ -40,6 +40,10 @@ export const LandingPage = () => {
   const showEmailError = emailTouched && (!email.trim() || !isValidEmail);
 
   const handleStart = async () => {
+    if (!name.trim() && !email.trim()) {
+      setError("Please enter your name and email to continue.");
+      return;
+    }
     if (!name.trim()) {
       setError("Please enter your name to continue.");
       return;
@@ -116,13 +120,6 @@ export const LandingPage = () => {
                   onChange={(event) => setName(event.target.value)}
                   required
                   fullWidth
-                  onBlur={() => setEmailTouched(true)}
-                  error={showEmailError}
-                  helperText={
-                    showEmailError
-                      ? "Enter a valid email address (e.g., user@example.com)"
-                      : undefined
-                  }
                 />
                 <TextField
                   label="Email"
@@ -131,6 +128,13 @@ export const LandingPage = () => {
                   onChange={(event) => setEmail(event.target.value)}
                   required
                   fullWidth
+                  onBlur={() => setEmailTouched(true)}
+                  error={showEmailError}
+                  helperText={
+                    showEmailError
+                      ? "Enter a valid email address (e.g., user@example.com)"
+                      : undefined
+                  }
                 />
 
                 <Box>
